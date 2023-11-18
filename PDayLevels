@@ -1,0 +1,220 @@
+//@version=5
+//December 2019
+//April 2022 update: Adding alert conditons asked by @HTVH and option to select another resolutions asked by @ganuda, @ebizupper and other users.
+//disable_higher_tf = not(timeframe.isweekly or timeframe.ismonthly or timeframe.isdaily and timeframe.multiplier > 1)
+
+Is30minOrHigherTF() =>
+	timeframe.in_seconds() >= timeframe.in_seconds("30")
+
+
+indicator('High Low Yesterday', overlay=true, shorttitle='High Low Yesterday')
+res = input.timeframe(title='Resolution', defval='D')
+useColors = input(title='Fill with colors?', defval=true)
+plotBreakouts = input(title='Plot breakouts?', defval=true)
+plotMidPrice = input(title='Display mid-price?', defval=true)
+plotMidPriceBreakouts = input(title='Display mid-price breakouts?', defval=false)
+isess = session.regular
+t = ticker.new(syminfo.prefix, syminfo.ticker, session=isess)
+igaps = barmerge.gaps_off
+yesterdayHigh = request.security(t, res, high[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+yesterdayLow = request.security(t, res, low[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+yesterdayClose = request.security(t, res, close[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+yesterdayOpen = request.security(t, res, open[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+yesterdayVwap= request.security(t, res, ta.vwap[1], gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+//midPrice = (yesterdayHigh - yesterdayLow) / 2 + yesterdayLow
+
+
+
+dopen = request.security(t, res, open, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+
+plot(timeframe.isintraday ? dopen : na, title='Daily Open', style=plot.style_cross, color=color.rgb(238, 176, 85), linewidth=1)
+
+lab1 = label.new(x=bar_index + 3, y=dopen, color=color.new(#ea8437, 50), textcolor=color.white, style=label.style_label_left, text="opn", textalign=text.align_center, size=size.small)
+label.delete(lab1[1])
+// Define alert conditions:
+// Breakout up is when the current close price crosses up the previous day high
+// Breakout down is when the current close price crosses down the previous day low
+// Breakout Rejected is when the previous close is below previous day low AND then it crosses above previous day low, or previous close is above previous day high and then it crosses down previous high
+breakout_up_yc = ta.crossover(close, yesterdayClose) or close[1] < yesterdayClose and close > yesterdayClose
+breakout_down_yc = ta.crossunder(close, yesterdayClose) or close[1] >yesterdayClose and close <yesterdayClose
+breakout_up_o = ta.crossover(close, dopen) or close[1] < dopen and close > dopen
+breakout_down_o = ta.crossunder(close, dopen) or close[1] >dopen and close <dopen
+
+//breakout_fake = close[1] > yesterdayClose and ta.crossunder(close, dopen) or close[1] < dopen and ta.crossover(close, dopen)
+//breakout_up_midprice = close[1] < midPrice and close > midPrice
+//breakout_down_midprice = close[1] > midPrice and close < midPrice
+
+// -----------
+// Plotting
+// -----------
+
+// Lines
+a = timeframe.isintraday ? yesterdayHigh :na
+b = timeframe.isintraday ? yesterdayLow :na
+c = timeframe.isintraday ? yesterdayClose :na
+d = timeframe.isintraday ? yesterdayVwap :na
+e = timeframe.isintraday ? yesterdayOpen :na
+
+plot(ta.change(a) ? na : a, color = color.rgb(255, 255, 255), linewidth=1, style=plot.style_linebr, title=' Y High')
+plot(ta.change(b) ? na : b, color=color.new(#050506, 0), linewidth=1, style=plot.style_linebr, title=' Y Low')
+plot(ta.change(c) ? na : c, color=#4b3816, linewidth=1, style=plot.style_linebr, title=' Y Close')
+plot(ta.change(d) ? na : d, color=#eb1ea3, linewidth=1, style=plot.style_linebr, title=' Nvwap')
+plot(ta.change(d) ? na : e, color=#d1d819, linewidth=1, style=plot.style_cross, title='Y Open')
+
+//fill(a,b,color=(useColors? close>yesterdayHigh ? color.black : (close < yesterdayLow ? color.white : color.white) : color.black))
+//plot(plotMidPrice ? midPrice : na, title=' Y Mid Price', style = plot.style_cross, color=color.rgb(75, 56, 22))
+lab2 = label.new(x=bar_index + 3, y=yesterdayHigh, color=color.new(#ffffff, 50), textcolor=color.black, 
+ style=label.style_label_left, text="yh", textalign=text.align_center, size=size.small)
+label.delete(lab2[1])
+
+lab3 = label.new(x=bar_index + 3, y=yesterdayLow, color=color.new(#000000, 50), textcolor=color.white, 
+ style=label.style_label_left, text="yl", textalign=text.align_center, size=size.small)
+label.delete(lab3[1])
+
+lab4 = label.new(x=bar_index + 3, y=yesterdayClose, color=color.new(#4b3816, 50), textcolor=color.white, 
+ style=label.style_label_left, text="yc", textalign=text.align_center, size=size.small)
+label.delete(lab4[1])
+
+lab5 = label.new(x=bar_index + 3, y=yesterdayVwap, color=color.new(#eb1ea3, 50), textcolor=color.white, 
+ style=label.style_label_left, text="yVwap", textalign=text.align_center, size=size.small)
+label.delete(lab5[1])
+
+lab6 = label.new(x=bar_index + 3, y=yesterdayOpen, color=color.new(#eae744, 50), textcolor=color.white, 
+ style=label.style_label_left, text="popn", textalign=text.align_center, size=size.small)
+label.delete(lab6[1])
+// Breakouts
+plot(timeframe.isintraday and plotBreakouts and breakout_up_yc ? yesterdayClose : na, style=plot.style_circles, color=color.new(color.green, 0), linewidth=3, title='Breakout Up')
+plot(timeframe.isintraday and plotBreakouts and breakout_down_yc ? yesterdayClose : na, style=plot.style_circles, color=color.new(color.red, 0), linewidth=3, title='Breakout Down')
+plot(timeframe.isintraday and plotBreakouts and breakout_up_o ? dopen : na, style=plot.style_circles, color=color.new(color.green, 0), linewidth=3, title='Breakout Up')
+plot(timeframe.isintraday and plotBreakouts and breakout_down_o ? dopen : na, style=plot.style_circles, color=color.new(color.red, 0), linewidth=3, title='Breakout Down')
+//plot(plotBreakouts and breakout_fake ? close[1] >yesterdayClose ?yesterdayClose : dopen : na, style=plot.style_cross, color=color.new(color.orange, 0), linewidth=4, title='Fake Breakout')
+//plot(plotMidPriceBreakouts and breakout_up_midprice ? midPrice : na, style=plot.style_circles, color=color.new(color.green, 0), linewidth=5, title='Breakout midPrice Up')
+//plot(plotMidPriceBreakouts and breakout_down_midprice ? midPrice : na, style=plot.style_circles, color=color.new(color.red, 0), linewidth=5, title='Breakout midPrice Down')
+
+// Fire alert conditions
+alertcondition(breakout_up_yc, 'Breakout previous close')
+alertcondition(breakout_down_yc, 'Breakdown previous close')
+alertcondition(breakout_up_o, 'Breakout open')
+alertcondition(breakout_down_o, 'Breakdown open')
+//alertcondition(breakout_fake, 'Breakout rejected')
+//alertcondition(breakout_up_midprice, 'Breakout midprice high')
+//alertcondition(breakout_down_midprice, 'Breakout midprice low')
+
+//vwap
+//indicator(title="Volume Weighted Average Price", shorttitle="VWAP", overlay=true, timeframe="", timeframe_gaps=true)
+
+hideonDWM = input(false, title="Hide VWAP on 1D or Above", group="VWAP Settings")
+var anchor = input.string(defval = "Session", title="Anchor Period",
+ options=["Session", "Week", "Month", "Quarter", "Year", "Decade", "Century", "Earnings", "Dividends", "Splits"], group="VWAP Settings")
+src = input(title = "Source", defval = hlc3, group="VWAP Settings")
+offset = input(0, title="Offset", group="VWAP Settings")
+
+showBand_1 = input(false, title="", group="Standard Deviation Bands Settings", inline="band_1")
+stdevMult_1 = input(1.0, title="Bands Multiplier #1", group="Standard Deviation Bands Settings", inline="band_1")
+showBand_2 = input(false, title="", group="Standard Deviation Bands Settings", inline="band_2")
+stdevMult_2 = input(2.0, title="Bands Multiplier #2", group="Standard Deviation Bands Settings", inline="band_2")
+showBand_3 = input(false, title="", group="Standard Deviation Bands Settings", inline="band_3")
+stdevMult_3 = input(3.0, title="Bands Multiplier #3", group="Standard Deviation Bands Settings", inline="band_3")
+
+if barstate.islast and ta.cum(volume) == 0
+    runtime.error("No volume is provided by the data vendor.")
+
+new_earnings = request.earnings(syminfo.tickerid, earnings.actual, barmerge.gaps_on, barmerge.lookahead_on, ignore_invalid_symbol=true)
+new_dividends = request.dividends(syminfo.tickerid, dividends.gross, barmerge.gaps_on, barmerge.lookahead_on, ignore_invalid_symbol=true)
+new_split = request.splits(syminfo.tickerid, splits.denominator, barmerge.gaps_on, barmerge.lookahead_on, ignore_invalid_symbol=true)
+
+isNewPeriod = switch anchor
+	"Earnings"  => not na(new_earnings)
+	"Dividends" => not na(new_dividends)
+	"Splits"    => not na(new_split)
+	"Session"   => timeframe.change("D")
+	"Week"      => timeframe.change("W")
+	"Month"     => timeframe.change("M")
+	"Quarter"   => timeframe.change("3M")
+	"Year"      => timeframe.change("12M")
+	"Decade"    => timeframe.change("12M") and year % 10 == 0
+	"Century"   => timeframe.change("12M") and year % 100 == 0
+	=> false
+
+isEsdAnchor = anchor == "Earnings" or anchor == "Dividends" or anchor == "Splits"
+if na(src[1]) and not isEsdAnchor
+	isNewPeriod := true
+
+float vwapValue = na
+float upperBandValue1 = na
+float lowerBandValue1 = na
+float upperBandValue2 = na
+float lowerBandValue2 = na
+float upperBandValue3 = na
+float lowerBandValue3 = na
+
+if not (hideonDWM and timeframe.isdwm)
+    [_vwap, _stdevUpper, _] = ta.vwap(src, isNewPeriod, 1)
+	vwapValue := _vwap
+    stdevAbs = _stdevUpper - _vwap
+	upperBandValue1 := _vwap + stdevAbs * stdevMult_1
+	lowerBandValue1 := _vwap - stdevAbs * stdevMult_1
+	upperBandValue2 := _vwap + stdevAbs * stdevMult_2
+	lowerBandValue2 := _vwap - stdevAbs * stdevMult_2
+	upperBandValue3 := _vwap + stdevAbs * stdevMult_3
+	lowerBandValue3 := _vwap - stdevAbs * stdevMult_3
+
+plot(timeframe.isintraday ? vwapValue : na, title="VWAP", style=plot.style_cross, color=#f06292, offset=offset)
+
+upperBand_1 = plot(upperBandValue1, title="Upper Band #1", color=color.rgb(130, 136, 141), offset=offset, display = showBand_1 ? display.all : display.none)
+lowerBand_1 = plot(lowerBandValue1, title="Lower Band #1", color=color.rgb(130, 136, 141), offset=offset, display = showBand_1 ? display.all : display.none)
+fill(upperBand_1, lowerBand_1, title="Bands Fill #1", color= color.new(color.green, 95)    , display = showBand_1 ? display.all : display.none)
+
+upperBand_2 = plot(upperBandValue2, title="Upper Band #2", color=color.olive, offset=offset, display = showBand_2 ? display.all : display.none)
+lowerBand_2 = plot(lowerBandValue2, title="Lower Band #2", color=color.olive, offset=offset, display = showBand_2 ? display.all : display.none)
+fill(upperBand_2, lowerBand_2, title="Bands Fill #2", color= color.new(color.olive, 95)    , display = showBand_2 ? display.all : display.none)
+
+upperBand_3 = plot(upperBandValue3, title="Upper Band #3", color=color.teal, offset=offset, display = showBand_3 ? display.all : display.none)
+lowerBand_3 = plot(lowerBandValue3, title="Lower Band #3", color=color.teal, offset=offset, display = showBand_3 ? display.all : display.none)
+fill(upperBand_3, lowerBand_3, title="Bands Fill #3", color= color.new(color.teal, 95)    , display = showBand_3 ? display.all : display.none)
+
+//new session highs and lows
+//inputs
+show_trading_day = input.bool(true, "Show New Trading Day")
+
+//declare the variables - trading day must have var so it maintains its state, newday we need calculated every single bar
+var tradingday = 0
+new_day = false
+
+//calulations
+if (tradingday != time_tradingday) //if trading day is not equal to the current bars day
+    new_day := true //newday flips to true
+    tradingday := time_tradingday //update the variable to the new day ( := sets a parent state variable vrs =)
+else
+    new_day := false //if it is the same day then obviously it is not a "newday"
+
+//calcule bars since using the technical analysis function 
+bars_in_today = ta.barssince(new_day)
+
+//cannot run ta.highest with a 0 - this sets it to 1 on the tick of a new day to avoid the error. - on the tick after the new day it still is 1 so no double counting is happening
+if (bars_in_today<=0)
+    bars_in_today := 1
+
+//calculate the highest and lowet price of the day so far
+high_of_the_day = ta.highest(high, bars_in_today)
+low_of_the_day = ta.lowest(low, bars_in_today)
+
+//determine if a new high or low is being set
+high_being_set = ta.change(high_of_the_day)
+low_being_set = ta.change(low_of_the_day)
+
+//alerts
+//alertcondition(new_day, "New day alert", "It is a new trading day.") 
+alertcondition(high_being_set, "New High Alert", "New HIGH has been set.")
+alertcondition(low_being_set, "New Low Alert", "New LOW has been set.")
+
+//plots - new day can be turned off in inputs, plots can be turned off in style if needed 
+//plotshape(new_day and show_trading_day, style=shape.labelup, location=location.bottom, color=color.rgb(100, 101, 101), text="NEW DAY", size=size.auto)
+plot(ta.change(bar_index %3 != 0 and timeframe.isintraday ? high_of_the_day : na)? na :(bar_index %3 != 0 and timeframe.isintraday ? high_of_the_day : na) , style=plot.style_linebr, color = color.rgb(255, 255, 255), linewidth = 1)
+plot(ta.change(bar_index %3 != 0 and timeframe.isintraday ? low_of_the_day : na)? na :(bar_index %3 != 0 and timeframe.isintraday ? low_of_the_day : na) , style=plot.style_linebr, color = color.rgb(0, 0, 0), linewidth = 1)
+
+minutesInPeriod = input.int(30, "Period Length (Minutes)")
+periodStartMinute = input.int(0, "Period Start Minute (0-59)", minval=0, maxval=59)
+
+if minute % minutesInPeriod == periodStartMinute and not Is30minOrHigherTF()
+    line.new(bar_index, close*2, bar_index, close, extend = extend.both, color=color.new(#eff2f5, 0), style = line.style_dotted,width=1)
