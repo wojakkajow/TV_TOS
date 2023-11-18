@@ -1,0 +1,169 @@
+//@version=5
+// Daily SMAs for intraday charts
+
+indicator(title='Daily SMAs', shorttitle='DSMAs', overlay=true)
+
+disable_higher_tf = not(timeframe.isweekly or timeframe.ismonthly or timeframe.isdaily and timeframe.multiplier > 1)
+
+
+//DSMA 1
+len1 = input.int(25, minval=1, title='DMA #1')
+src1 = input(close, title='DSMA Source #1')
+sec1 = request.security(syminfo.tickerid, 'D', ta.sma(src1, len1), barmerge.gaps_off)
+
+plot(sec1, title='DSMA #1', color=close >= sec1 ? #8d8f58 : #8d8f58)
+
+lab1 = label.new(x=bar_index + 3, y=sec1, color=color.new(#8d8f58, 50), textcolor=color.white, style=label.style_label_left, text="dma" + str.tostring(len1), textalign=text.align_center, size=size.small)
+label.delete(lab1[1])
+
+
+//DSMA 2
+len2 = input.int(5, minval=1, title='DMA #2')
+src2 = input(close, title='DSMA Source #2')
+sec2 = request.security(syminfo.tickerid, 'D', ta.sma(src2, len2), barmerge.gaps_off)
+
+plot(sec2, title='DSMA #2', color=close >= sec2 ? #4dd0e1 : #4dd0e1)
+lab2 = label.new(x=bar_index + 3, y=sec2, color=color.new(#4dd0e1, 50), textcolor=color.white, style=label.style_label_left, text="dma" + str.tostring(len2), textalign=text.align_center, size=size.small)
+label.delete(lab2[1])
+
+//DSMA 3
+len3 = input.int(13, minval=1, title='DMA #3')
+src3 = input(close, title='DSMA Source #3')
+sec3 = request.security(syminfo.tickerid, 'D', ta.sma(src3, len3), barmerge.gaps_off)
+
+plot(sec3, title='DSMA #3', color=close >= sec3 ? #6d0ba2 : #6d0ba2)
+
+lab3 = label.new(x=bar_index + 3, y=sec3, color=color.new(#6d0ba2, 50), textcolor=color.white, 
+ style=label.style_label_left, text="dma" + str.tostring(len3), textalign=text.align_center, size=size.small)
+label.delete(lab3[1])
+
+//DSMA 4
+len4 = input.int(65, minval=1, title='DMA #4')
+src4 = input(close, title='DSMA Source #4')
+sec4 = request.security(syminfo.tickerid, 'D', ta.sma(src4, len4), barmerge.gaps_off)
+
+plot(sec4, title='DSMA #4', color=close >= sec4 ? #ea954a : #ea954a)
+lab4 = label.new(x=bar_index + 3, y=sec4, color=color.new(#ea954a, 50), textcolor=color.white, 
+ style=label.style_label_left, text="dma" + str.tostring(len4), textalign=text.align_center, size=size.small)
+label.delete(lab4[1])
+
+//DSMA 5
+len5 = input.int(34, minval=1, title='DMA #5')
+src5 = input(close, title='DSMA Source #5')
+sec5 = request.security(syminfo.tickerid, 'D', ta.sma(src5, len5), barmerge.gaps_off)
+
+plot(sec5, title='DSMA #5', color=close >= sec5 ? #e66fc2 : #e66fc2)
+lab5 = label.new(x=bar_index + 3, y=sec5, color=color.new(#e66fc2, 50), textcolor=color.white, 
+ style=label.style_label_left, text="dma" + str.tostring(len5), textalign=text.align_center, size=size.small)
+label.delete(lab5[1])
+
+
+//DSMA 6
+len6 = input.int(50, minval=1, title='DMA #6')
+src6 = input(close, title='DSMA Source #6')
+sec6 = request.security(syminfo.tickerid, 'D', ta.sma(src6, len6), barmerge.gaps_off)
+
+plot(sec6, title='DSMA #6', color=close >= sec6 ? #167f4c : #167f4c)
+
+lab6 = label.new(x=bar_index + 3, y=sec6, color=color.new(#167f4c, 50), textcolor=color.white, 
+ style=label.style_label_left, text="dma" + str.tostring(len6), textalign=text.align_center, size=size.small)
+label.delete(lab6[1])
+//DSMA 7
+len7 = input.int(100, minval=1, title='DMA #7')
+src7 = input(close, title='DSMA Source #7')
+sec7 = request.security(syminfo.tickerid, 'D', ta.sma(src7, len7), barmerge.gaps_off)
+
+plot(sec7, title='DSMA #7', color=close >= sec7 ? color.blue : color.blue)
+
+lab7 = label.new(x=bar_index + 3, y=sec7, color=color.new(#2962ff, 50), textcolor=color.white, 
+ style=label.style_label_left, text="dma" + str.tostring(len7), textalign=text.align_center, size=size.small)
+label.delete(lab7[1])
+//DSMA 8
+len8 = input.int(200, minval=1, title='DMA #8')
+src8 = input(close, title='DSMA Source #8')
+sec8 = request.security(syminfo.tickerid, 'D', ta.sma(src8, len8), barmerge.gaps_off)
+
+plot(sec8, title='DSMA #8', color=close >= sec8 ? color.red : color.red)
+
+lab8 = label.new(x=bar_index + 3, y=sec8, color=color.new(#ff5252, 50), textcolor=color.white, 
+ style=label.style_label_left, text="dma" + str.tostring(len8), textalign=text.align_center, size=size.small)
+label.delete(lab8[1])
+//Daily Bollinger
+
+length = input.int(20, minval=1)
+src = input(close, title='DBollinger Source')
+mult = input.float(2.0, minval=0.001, maxval=50, title='StdDev')
+basis = request.security(syminfo.tickerid, 'D', ta.sma(src, length), barmerge.gaps_off)
+dev = mult * request.security(syminfo.tickerid, 'D', ta.stdev(src, length), barmerge.gaps_off)
+upper = basis + dev
+lower = basis - dev
+offset = input.int(0, 'Offset', minval=-500, maxval=500)
+plot(basis, 'Bollinger', color=color.new(#ccd250, 0), offset=offset)
+p1 = plot(upper, 'Upper', color=color.new(#e3e5eb, 0), offset=offset, style=plot.style_circles)
+p2 = plot(lower, 'Lower', color=color.new(#e3e5eb, 0), offset=offset, style=plot.style_circles)
+//fill(p1, p2, title = "Background", color=color.rgb(33, 150, 243, 95))
+
+
+
+
+//atr
+i_period = input.int(defval=14, title='Length')
+do_fills = input.bool(defval=true, title='Fills?')
+
+
+[d1_high, d1_low, d1_atr, d1_open, prev_d1_close,prev_d1_high,prev_d1_low] = request.security(
+     syminfo.tickerid,
+     'D',
+     [high, low, ta.atr(i_period), open, close[1],high[1],low[1]],
+     lookahead = barmerge.lookahead_on)
+[intraday_high, intraday_low,  intraday_open, prev_intraday_close,prev_intraday_high,prev_intraday_low] = request.security(
+     syminfo.tickerid,
+     '1440',
+     [high, low, open, close[1],high[1],low[1]],
+     lookahead = barmerge.lookahead_on)
+ 
+
+isIntraday      = timeframe.isintraday
+//day_high        = isIntraday ? intraday_high : d1_high
+//day_low         = isIntraday ? intraday_low : d1_low
+day_open        = isIntraday ? intraday_open : d1_open
+//prev_day_close  = isIntraday ? prev_intraday_close : prev_d1_close
+//prev_day_high   = isIntraday ? prev_intraday_high : prev_d1_high
+//prev_day_low    = isIntraday ? prev_intraday_low : prev_d1_low
+day_atr         = d1_atr
+
+
+
+
+//V1=day_atr + prev_d1_close
+//4=prev_d1_close - day_atr[1]
+//L1 = plot(disable_higher_tf ? prev_d1_close + day_atr/2 : na, title='L1: prv day close + ATR/2 ', color=color.new(#1e1e1f, 0))
+//L2 = plot(disable_higher_tf ? prev_d1_close - day_atr/2 : na, title='L2: prv day close - ATR/2 ', color=color.new(#d4d6d7, 0))
+//L3 = plot(disable_higher_tf ? prev_d1_close + day_atr : na, title='L3: prv day close + ATR ', color=color.new(#1e1e1f, 0), linewidth=2)
+//L4 = plot(disable_higher_tf ? prev_d1_close - day_atr : na, title='L4: prv day close - ATR', color=color.new(#d4d6d7, 0), linewidth=2)
+la=disable_higher_tf ? d1_open + day_atr/2 : na
+lb=disable_higher_tf ? d1_open - day_atr/2 : na
+lc=disable_higher_tf ? d1_open + day_atr : na
+ld=disable_higher_tf ? d1_open - day_atr : na
+L1 = plot(ta.change(la) ? na : la, title='L5: current day open + ATR/2', style=plot.style_linebr, color=color.new(#1a856a, 0))
+L2 = plot(ta.change(lb) ? na : lb, title='L6: current day open - ATR/2', style=plot.style_linebr, color=color.new(#f8601f, 0))
+L3 = plot(ta.change(lc) ? na : lc, title='L5: current day open + ATR', style=plot.style_linebr, color=color.new(#1a856a, 0), linewidth=2)
+L4 = plot(ta.change(ld) ? na : ld, title='L6: current day open - ATR', style=plot.style_linebr, color=color.new(#f8601f, 0), linewidth=2)
+
+labL1 = label.new(x=bar_index + 3, y=la, color=color.new(#1a856a, 50), textcolor=color.white, style=label.style_label_left, text="atrh", textalign=text.align_center, size=size.small)
+label.delete(labL1[1])
+
+labL2 = label.new(x=bar_index + 3, y=lb, color=color.new(#f8601f, 50), textcolor=color.white, style=label.style_label_left, text="atrl", textalign=text.align_center, size=size.small)
+label.delete(labL2[1])
+
+labL3 = label.new(x=bar_index + 3, y=lc, color=color.new(#1a856a, 50), textcolor=color.white, style=label.style_label_left, text="atrEh", textalign=text.align_center, size=size.small)
+label.delete(labL3[1])
+
+labL4 = label.new(x=bar_index + 3, y=ld, color=color.new(#f8601f, 50), textcolor=color.white, style=label.style_label_left, text="atrEl", textalign=text.align_center, size=size.small)
+label.delete(labL4[1])
+
+//fill_up   = plot(intraday_open+(V1-intraday_open)/2, linewidth=3, color=color.new(color.black, 100), title='t ')
+//fill_down = plot(intraday_open-(intraday_open-V4)/2, linewidth=3, color=color.new(color.black, 100), title='t2 ')
+//ta.change(yesterdayHigh) ? na : yesterdayHigh
+//fill(fill_up, L1, title='Fill High', color=do_fills?color.new(color.green, 90):color.new(color.green, 100))
+//fill(fill_down, L4, title='Fill Low', color=do_fills?color.new(color.red, 90):color.new(color.red, 100))
